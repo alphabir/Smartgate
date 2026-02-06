@@ -13,7 +13,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Process Shim: Critical for browser compatibility with environment variables -->
+  <!-- Process Shim: Must be defined before any modules load -->
   <script>
     window.process = {
       env: {
@@ -22,27 +22,26 @@
         ADMIN_PASSWORD: '1234'
       }
     };
-    // Expose process to global scope for standard access
     var process = window.process;
   </script>
 
   <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "@google/genai": "https://esm.sh/@google/genai@1.40.0",
-    "recharts": "https://esm.sh/recharts@3.7.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19.0.0",
+      "react/": "https://esm.sh/react@19.0.0/",
+      "react-dom": "https://esm.sh/react-dom@19.0.0",
+      "react-dom/": "https://esm.sh/react-dom@19.0.0/",
+      "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+      "@google/genai": "https://esm.sh/@google/genai@1.40.0",
+      "recharts": "https://esm.sh/recharts@3.7.0"
+    }
   }
-}
-</script>
+  </script>
 </head>
 <body class="bg-slate-50 text-slate-900">
   <div id="root"></div>
-  <!-- Use relative path for maximum compatibility -->
+  <!-- Standard entry point -->
   <script type="module" src="index.tsx"></script>
 </body>
 </html>

@@ -1,17 +1,16 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Employee, RecognitionResult } from "../types";
+import { Employee, RecognitionResult } from "../types.ts";
 
 /**
  * Robust API Key recovery. 
- * In Vercel, process.env is usually injected, but we provide a fallback
- * to prevent the entire JS bundle from failing execution.
  */
 const safeGetApiKey = (): string => {
   try {
-    const key = process.env.API_KEY;
+    // Check global window.process shim first, then environment
+    const key = (window as any).process?.env?.API_KEY || process?.env?.API_KEY;
     if (!key) {
-      console.warn("Institutional Alert: Biometric API_KEY is undefined in current context.");
+      console.warn("Biometric Alert: API_KEY is undefined. Gate recognition features will be offline.");
       return "";
     }
     return key;
@@ -20,17 +19,22 @@ const safeGetApiKey = (): string => {
   }
 };
 
-// Initialize client. Even with an empty string, the SDK won't crash until a call is made.
-const ai = new GoogleGenAI({ apiKey: safeGetApiKey() });
+// Lazy initialization of the AI client inside service methods to prevent boot-time crashes
+let aiClient: GoogleGenAI | null = null;
+const getClient = () => {
+  if (!aiClient) {
+    const key = safeGetApiKey();
+    aiClient = new GoogleGenAI({ apiKey: key });
+  }
+  return aiClient;
+};
 
 export const GeminiService = {
-  /**
-   * Enrollment: Uses Pro for high-precision feature extraction.
-   */
   async generateVisualSignature(images: string[]): Promise<string> {
     const key = safeGetApiKey();
-    if (!key) throw new Error("Registry Error: No authorized API_KEY found for identity enrollment.");
+    if (!key) throw new Error("Registry Access Denied: Biometric API Key missing.");
 
+    const ai = getClient();
     const imageParts = images.map(img => ({
       inlineData: {
         data: img.split(',')[1],
@@ -39,17 +43,9 @@ export const GeminiService = {
     }));
 
     const prompt = `
-      You are a world-class biometric expert for "The College Advisor" campus security system. 
       Analyze these enrollment photos for an academic identity registry. 
-      Generate a technical "Academic Visual Signature" (text vector) that describes this member's permanent facial structure.
-      Focus on:
-      - Skeletal structure (brow ridge, jawline, cheekbones)
-      - Eye characteristics (inter-pupillary distance, fold type)
-      - Nose geometry (bridge width, tip shape)
-      - Permanent identifying marks.
-      
-      This signature will be used to authorize campus entry under varied lighting and angles.
-      BE CONCISE, TECHNICAL, AND STRUCTURED.
+      Generate a technical "Academic Visual Signature" that describes this member's facial structure.
+      Focus on skeletal structure, eye characteristics, and permanent marks.
     `;
 
     try {
@@ -57,40 +53,30 @@ export const GeminiService = {
         model: 'gemini-3-pro-preview', 
         contents: { parts: [...imageParts, { text: prompt }] },
       });
-      return response.text || "No signature generated";
+      return response.text || "Unsigned Profile";
     } catch (error) {
-      console.error("Advisor Enrollment Error:", error);
+      console.error("Enrollment Failure:", error);
       throw error;
     }
   },
 
-  /**
-   * Identification: Uses Flash for real-time gate responses.
-   */
   async identifyFace(frameBase64: string, members: Employee[]): Promise<RecognitionResult> {
     if (members.length === 0) return { matched: false, confidence: 0 };
     
     const key = safeGetApiKey();
-    if (!key) return { matched: false, confidence: 0, message: "System Restricted: Biometric Key Missing" };
+    if (!key) return { matched: false, confidence: 0, message: "System Restricted: Key Missing" };
 
+    const ai = getClient();
     const livePart = {
       inlineData: { data: frameBase64.split(',')[1], mimeType: 'image/jpeg' }
     };
 
-    const memberContext = members.map(m => `[REGISTRY_ID: ${m.id}, NAME: ${m.name}] BIO_VECTOR: ${m.visualSignature}`).join("\n");
+    const memberContext = members.map(m => `[ID: ${m.id}, NAME: ${m.name}] BIO: ${m.visualSignature}`).join("\n");
 
     const prompt = `
-      "The College Advisor" Gate Logic:
-      Compare the person in the live campus feed against these institutional profiles:
+      Compare the person in the live feed against these profiles:
       ${memberContext}
-
-      Perform a high-confidence match. Output ONLY a JSON object:
-      {
-        "matched": boolean,
-        "employeeId": string | null,
-        "confidence": number (0-1),
-        "message": "Identification rationale"
-      }
+      Output ONLY JSON: { "matched": boolean, "employeeId": string | null, "confidence": number, "message": string }
     `;
 
     try {
@@ -114,28 +100,21 @@ export const GeminiService = {
 
       return JSON.parse(response.text || '{}') as RecognitionResult;
     } catch (error) {
-      console.error("Advisor Identification Error:", error);
+      console.error("Identification Failure:", error);
       return { matched: false, confidence: 0 };
     }
   },
 
-  /**
-   * Liveness Detection: Temporal analysis for anti-spoofing.
-   */
   async verifyLiveness(frames: string[]): Promise<{ isLive: boolean; confidence: number }> {
     const key = safeGetApiKey();
     if (!key) return { isLive: false, confidence: 0 };
 
+    const ai = getClient();
     const imageParts = frames.map(img => ({
       inlineData: { data: img.split(',')[1], mimeType: 'image/jpeg' }
     }));
 
-    const prompt = `
-      Campus Gate Security Protocol: Anti-spoofing analysis.
-      Analyze these frames for signs of printed photos, digital screens, or lack of physiological movement.
-      
-      Output JSON: { "isLive": boolean, "confidence": number }
-    `;
+    const prompt = `Perform anti-spoofing analysis. Output JSON: { "isLive": boolean, "confidence": number }`;
 
     try {
       const response = await ai.models.generateContent({
@@ -155,7 +134,7 @@ export const GeminiService = {
       });
       return JSON.parse(response.text || '{}');
     } catch (error) {
-      console.error("Advisor Liveness Error:", error);
+      console.error("Liveness Check Failure:", error);
       return { isLive: false, confidence: 0 };
     }
   }
