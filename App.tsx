@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import GateMode from './components/GateMode';
-import AdminDashboard from './components/AdminDashboard';
-import EmployeeDashboard from './components/EmployeeDashboard';
-import { AppMode, Employee } from './types';
+import GateMode from './components/GateMode.tsx';
+import AdminDashboard from './components/AdminDashboard.tsx';
+import EmployeeDashboard from './components/EmployeeDashboard.tsx';
+import { AppMode, Employee } from './types.ts';
 
 const LOGO_URL = "https://lh3.googleusercontent.com/d/1lJPDezlGmSFBxZfO0agZtCAlsN-Zrnmk";
 

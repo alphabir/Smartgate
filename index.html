@@ -16,9 +16,10 @@
   <!-- Process Shim: Critical for browser compatibility with environment variables -->
   <script>
     window.process = window.process || { env: { NODE_ENV: 'production' } };
-    // Ensure the app doesn't crash if these are accessed before injection
-    if (!window.process.env.API_KEY) window.process.env.API_KEY = "";
-    if (!window.process.env.ADMIN_PASSWORD) window.process.env.ADMIN_PASSWORD = "1234";
+    if (!window.process.env) window.process.env = {};
+    // Fallbacks for local development or delayed Vercel injection
+    window.process.env.API_KEY = window.process.env.API_KEY || "";
+    window.process.env.ADMIN_PASSWORD = window.process.env.ADMIN_PASSWORD || "1234";
   </script>
 
   <script type="importmap">
@@ -37,6 +38,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900">
   <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+  <!-- Use relative path for maximum compatibility across environments -->
+  <script type="module" src="index.tsx"></script>
 </body>
 </html>
