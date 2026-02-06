@@ -15,11 +15,15 @@
   
   <!-- Process Shim: Critical for browser compatibility with environment variables -->
   <script>
-    window.process = window.process || { env: { NODE_ENV: 'production' } };
-    if (!window.process.env) window.process.env = {};
-    // Fallbacks for local development or delayed Vercel injection
-    window.process.env.API_KEY = window.process.env.API_KEY || "";
-    window.process.env.ADMIN_PASSWORD = window.process.env.ADMIN_PASSWORD || "1234";
+    window.process = {
+      env: {
+        NODE_ENV: 'production',
+        API_KEY: '',
+        ADMIN_PASSWORD: '1234'
+      }
+    };
+    // Expose process to global scope for standard access
+    var process = window.process;
   </script>
 
   <script type="importmap">
@@ -38,7 +42,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900">
   <div id="root"></div>
-  <!-- Use relative path for maximum compatibility across environments -->
+  <!-- Use relative path for maximum compatibility -->
   <script type="module" src="index.tsx"></script>
 </body>
 </html>
