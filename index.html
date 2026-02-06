@@ -13,6 +13,14 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <!-- Process Shim: Critical for browser compatibility with environment variables -->
+  <script>
+    window.process = window.process || { env: { NODE_ENV: 'production' } };
+    // Ensure the app doesn't crash if these are accessed before injection
+    if (!window.process.env.API_KEY) window.process.env.API_KEY = "";
+    if (!window.process.env.ADMIN_PASSWORD) window.process.env.ADMIN_PASSWORD = "1234";
+  </script>
+
   <script type="importmap">
 {
   "imports": {
@@ -29,7 +37,6 @@
 </head>
 <body class="bg-slate-50 text-slate-900">
   <div id="root"></div>
-  <!-- This script tag is CRITICAL for Vercel/Vite to find the entry point of your app -->
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>

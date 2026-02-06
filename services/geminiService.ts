@@ -2,24 +2,34 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Employee, RecognitionResult } from "../types";
 
-// Safety check for API Key to avoid "process is not defined" or null errors in browser
-const getApiKey = () => {
+/**
+ * Robust API Key recovery. 
+ * In Vercel, process.env is usually injected, but we provide a fallback
+ * to prevent the entire JS bundle from failing execution.
+ */
+const safeGetApiKey = (): string => {
   try {
-    return process.env.API_KEY || '';
+    const key = process.env.API_KEY;
+    if (!key) {
+      console.warn("Institutional Alert: Biometric API_KEY is undefined in current context.");
+      return "";
+    }
+    return key;
   } catch (e) {
-    return '';
+    return "";
   }
 };
 
-const ai = new GoogleGenAI({ apiKey: getApiKey() });
+// Initialize client. Even with an empty string, the SDK won't crash until a call is made.
+const ai = new GoogleGenAI({ apiKey: safeGetApiKey() });
 
 export const GeminiService = {
   /**
    * Enrollment: Uses Pro for high-precision feature extraction.
    */
   async generateVisualSignature(images: string[]): Promise<string> {
-    const key = getApiKey();
-    if (!key) throw new Error("Missing API Key for College Advisor Biometrics");
+    const key = safeGetApiKey();
+    if (!key) throw new Error("Registry Error: No authorized API_KEY found for identity enrollment.");
 
     const imageParts = images.map(img => ({
       inlineData: {
@@ -59,8 +69,9 @@ export const GeminiService = {
    */
   async identifyFace(frameBase64: string, members: Employee[]): Promise<RecognitionResult> {
     if (members.length === 0) return { matched: false, confidence: 0 };
-    const key = getApiKey();
-    if (!key) return { matched: false, confidence: 0, message: "System Offline: Key Missing" };
+    
+    const key = safeGetApiKey();
+    if (!key) return { matched: false, confidence: 0, message: "System Restricted: Biometric Key Missing" };
 
     const livePart = {
       inlineData: { data: frameBase64.split(',')[1], mimeType: 'image/jpeg' }
@@ -112,7 +123,7 @@ export const GeminiService = {
    * Liveness Detection: Temporal analysis for anti-spoofing.
    */
   async verifyLiveness(frames: string[]): Promise<{ isLive: boolean; confidence: number }> {
-    const key = getApiKey();
+    const key = safeGetApiKey();
     if (!key) return { isLive: false, confidence: 0 };
 
     const imageParts = frames.map(img => ({
