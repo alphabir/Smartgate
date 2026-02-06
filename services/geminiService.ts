@@ -18,26 +18,27 @@ export const GeminiService = {
     }));
 
     const prompt = `
-      You are a world-class biometric expert. Analyze these enrollment photos. 
-      Generate a technical "Visual Feature Vector" (in text form) that describes this person's permanent facial structure.
+      You are a world-class biometric expert for "The College Advisor" campus security system. 
+      Analyze these enrollment photos for an academic identity registry. 
+      Generate a technical "Academic Visual Signature" (text vector) that describes this member's permanent facial structure.
       Focus on:
       - Skeletal structure (brow ridge, jawline, cheekbones)
       - Eye characteristics (inter-pupillary distance, fold type)
       - Nose geometry (bridge width, tip shape)
-      - Any permanent identifying marks.
+      - Permanent identifying marks.
       
-      This signature will be used to identify them in low light or from different angles.
+      This signature will be used to authorize campus entry under varied lighting and angles.
       BE CONCISE, TECHNICAL, AND STRUCTURED.
     `;
 
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview', // Pro for enrollment accuracy
+        model: 'gemini-3-pro-preview', 
         contents: { parts: [...imageParts, { text: prompt }] },
       });
       return response.text || "No signature generated";
     } catch (error) {
-      console.error("Gemini Enrollment Error:", error);
+      console.error("Advisor Enrollment Error:", error);
       throw error;
     }
   },
@@ -45,26 +46,26 @@ export const GeminiService = {
   /**
    * Identification (Speed Task): Uses Flash for real-time gate responses.
    */
-  async identifyFace(frameBase64: string, employees: Employee[]): Promise<RecognitionResult> {
-    if (employees.length === 0) return { matched: false, confidence: 0 };
+  async identifyFace(frameBase64: string, members: Employee[]): Promise<RecognitionResult> {
+    if (members.length === 0) return { matched: false, confidence: 0 };
 
     const livePart = {
       inlineData: { data: frameBase64.split(',')[1], mimeType: 'image/jpeg' }
     };
 
-    const employeeContext = employees.map(e => `[ID: ${e.id}, NAME: ${e.name}] FEATURES: ${e.visualSignature}`).join("\n");
+    const memberContext = members.map(m => `[REGISTRY_ID: ${m.id}, NAME: ${m.name}] BIO_VECTOR: ${m.visualSignature}`).join("\n");
 
     const prompt = `
-      Compare the person in the current live frame against these registered profiles:
-      ${employeeContext}
+      "The College Advisor" Gate Logic:
+      Compare the person in the live campus feed against these institutional profiles:
+      ${memberContext}
 
-      Perform a high-confidence match. Consider facial expression changes.
-      Output ONLY a JSON object:
+      Perform a high-confidence match. Output ONLY a JSON object:
       {
         "matched": boolean,
         "employeeId": string | null,
         "confidence": number (0-1),
-        "message": "Reasoning"
+        "message": "Identification rationale"
       }
     `;
 
@@ -89,7 +90,7 @@ export const GeminiService = {
 
       return JSON.parse(response.text || '{}') as RecognitionResult;
     } catch (error) {
-      console.error("Gemini Identification Error:", error);
+      console.error("Advisor Identification Error:", error);
       return { matched: false, confidence: 0 };
     }
   },
@@ -103,10 +104,8 @@ export const GeminiService = {
     }));
 
     const prompt = `
-      Analyze this burst of frames. Detect spoofing attempts:
-      1. Screen reflection or moiré patterns (indicating a phone/monitor).
-      2. Static edges (indicating a printed photo).
-      3. Lack of eye-blinking or natural head micro-shifts.
+      Campus Gate Security Protocol: Anti-spoofing analysis.
+      Analyze these frames for signs of printed photos, digital screens, or lack of physiological movement.
       
       Output JSON: { "isLive": boolean, "confidence": number }
     `;
@@ -129,7 +128,7 @@ export const GeminiService = {
       });
       return JSON.parse(response.text || '{}');
     } catch (error) {
-      console.error("Liveness Error:", error);
+      console.error("Advisor Liveness Error:", error);
       return { isLive: false, confidence: 0 };
     }
   }

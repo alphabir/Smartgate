@@ -1,6 +1,6 @@
 {
-  "name": "SmartGate Attendance AI",
-  "description": "An enterprise-grade facial recognition attendance system for office gates, featuring real-time AI detection, check-in/out logic, and a comprehensive admin dashboard.",
+  "name": "The College Advisor",
+  "description": "An academic-grade AI facial recognition system for campus attendance, featuring real-time biometric tracking, student/faculty management, and a comprehensive institutional dashboard.",
   "requestFramePermissions": [
     "camera"
   ]

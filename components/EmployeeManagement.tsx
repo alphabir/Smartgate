@@ -9,8 +9,8 @@ interface EmployeeManagementProps {
 }
 
 const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onRefresh }) => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [members, setMembers] = useState<Employee[]>([]);
+  const [schedules, setSchedules] = useState<Shift[]>([]);
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
   const [enrollStep, setEnrollStep] = useState<1 | 2>(1); 
   const [activeTab, setActiveTab] = useState<'PROFESSIONAL' | 'PERSONAL' | 'BANK'>('PROFESSIONAL');
@@ -30,10 +30,10 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onRefresh }) =>
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    setEmployees(StorageService.getEmployees());
-    const loadedShifts = StorageService.getShifts();
-    setShifts(loadedShifts);
-    if (loadedShifts.length > 0) setFormData(prev => ({ ...prev, shiftId: loadedShifts[0].id }));
+    setMembers(StorageService.getEmployees());
+    const loadedSchedules = StorageService.getShifts();
+    setSchedules(loadedSchedules);
+    if (loadedSchedules.length > 0) setFormData(prev => ({ ...prev, shiftId: loadedSchedules[0].id }));
   }, []);
 
   const startEnrollmentCamera = async () => {
@@ -56,8 +56,8 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onRefresh }) =>
     setIsProcessingEnrollment(true);
     try {
       const signature = await GeminiService.generateVisualSignature(capturedImages);
-      const newEmployee: Employee = {
-        id: `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+      const newMember: Employee = {
+        id: `MEMBER-${Math.floor(10000 + Math.random() * 90000)}`,
         name: formData.name,
         department: formData.department,
         role: formData.role,
@@ -82,59 +82,63 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onRefresh }) =>
           bankName: formData.bankName
         }
       };
-      StorageService.saveEmployee(newEmployee);
-      setEmployees(prev => [...prev, newEmployee]);
+      StorageService.saveEmployee(newMember);
+      setMembers(prev => [...prev, newMember]);
       setIsEnrollModalOpen(false);
       onRefresh();
-    } catch (err) { alert("AI enrollment failed."); }
+    } catch (err) { alert("Advisor AI biometric sync failed."); }
     finally { setIsProcessingEnrollment(false); }
   };
 
   return (
-    <div className="space-y-8 animate-[fadeIn_0.5s_ease-out]">
-      <div className="flex justify-between items-center">
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-500">
+      <div className="flex justify-between items-center bg-white p-10 rounded-[50px] shadow-sm border border-indigo-50">
         <div>
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">Personnel Directory</h3>
-          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Found {employees.length} matched records</p>
+          <h3 className="text-3xl font-black text-slate-950 tracking-tight">Campus Registry</h3>
+          <p className="text-indigo-400 font-bold text-[10px] uppercase tracking-[0.3em] mt-2">Active Database: {members.length} Identities Verified</p>
         </div>
         <button 
           onClick={() => setIsEnrollModalOpen(true)}
-          className="bg-blue-600 text-white px-10 py-5 rounded-[24px] font-black uppercase tracking-widest text-xs shadow-2xl shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          className="bg-indigo-600 text-white px-12 py-6 rounded-[30px] font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center space-x-4"
         >
-          <i className="fa-solid fa-user-plus mr-3"></i> Add Corporate User
+          <i className="fa-solid fa-user-graduate text-lg"></i> 
+          <span>Enroll New Member</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {employees.map((emp) => (
-          <div key={emp.id} className="bg-white p-10 rounded-[40px] shadow-sm border border-slate-200 group hover:shadow-2xl hover:border-blue-200 transition-all">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {members.map((emp) => (
+          <div key={emp.id} className="bg-white p-12 rounded-[55px] shadow-sm border border-indigo-50 group hover:shadow-2xl hover:border-indigo-400 transition-all relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-[60px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6">
+               <i className="fa-solid fa-qrcode text-indigo-300"></i>
+            </div>
             <div className="flex flex-col items-center text-center">
-              <div className="relative mb-6">
-                 <img src={emp.thumbnail} className="w-32 h-32 rounded-[40px] object-cover border-8 border-slate-50 shadow-inner group-hover:scale-110 transition-transform duration-500" />
-                 <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-green-500 text-white rounded-2xl flex items-center justify-center border-4 border-white">
-                    <i className="fa-solid fa-check text-xs"></i>
+              <div className="relative mb-8">
+                 <img src={emp.thumbnail} className="w-40 h-40 rounded-[60px] object-cover border-[10px] border-slate-50 shadow-2xl group-hover:scale-105 transition-transform duration-700" />
+                 <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-indigo-600 text-white rounded-3xl flex items-center justify-center border-4 border-white shadow-lg">
+                    <i className="fa-solid fa-fingerprint text-sm"></i>
                  </div>
               </div>
-              <h4 className="font-black text-slate-900 text-xl mb-1">{emp.name}</h4>
-              <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-6">{emp.role}</p>
+              <h4 className="font-black text-slate-950 text-2xl mb-2 tracking-tight">{emp.name}</h4>
+              <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-8">{emp.role}</p>
               
-              <div className="w-full grid grid-cols-2 gap-4 mb-8">
-                 <div className="bg-slate-50 p-4 rounded-2xl text-left border border-slate-100">
-                    <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Department</p>
-                    <p className="text-sm font-bold text-slate-700 truncate">{emp.department}</p>
+              <div className="w-full grid grid-cols-2 gap-4 mb-10">
+                 <div className="bg-indigo-50/50 p-5 rounded-[24px] text-left border border-indigo-100/30">
+                    <p className="text-[9px] font-black text-slate-400 uppercase mb-2">Faculty/Dept</p>
+                    <p className="text-xs font-black text-slate-900 truncate">{emp.department}</p>
                  </div>
-                 <div className="bg-slate-50 p-4 rounded-2xl text-left border border-slate-100">
-                    <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Employee ID</p>
-                    <p className="text-sm font-bold text-slate-700 font-mono">{emp.id}</p>
+                 <div className="bg-indigo-50/50 p-5 rounded-[24px] text-left border border-indigo-100/30">
+                    <p className="text-[9px] font-black text-slate-400 uppercase mb-2">Registry ID</p>
+                    <p className="text-xs font-black text-indigo-600 font-mono tracking-tighter">{emp.id.split('-')[1]}</p>
                  </div>
               </div>
 
-              <div className="flex w-full space-x-3">
-                 <button className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all">
-                    Profile Details
+              <div className="flex w-full space-x-4">
+                 <button className="flex-1 bg-slate-950 text-white py-5 rounded-[24px] font-black uppercase tracking-widest text-[9px] shadow-xl hover:bg-indigo-600 transition-all">
+                    Member Dossier
                  </button>
-                 <button className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">
-                    <i className="fa-solid fa-trash-can"></i>
+                 <button className="w-16 h-16 bg-rose-50 text-rose-500 rounded-[24px] hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-sm">
+                    <i className="fa-solid fa-user-minus"></i>
                  </button>
               </div>
             </div>
@@ -143,150 +147,156 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onRefresh }) =>
       </div>
 
       {isEnrollModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-[fadeIn_0.3s_ease-out]">
-          <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col h-[85vh]">
-            <div className="bg-slate-50 px-12 py-10 border-b border-slate-200 flex justify-between items-center shrink-0">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-10 bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300">
+          <div className="bg-white rounded-[60px] shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col h-[90vh]">
+            <div className="bg-indigo-50/30 px-14 py-12 border-b border-indigo-100 flex justify-between items-center">
                <div>
-                 <h3 className="font-black text-slate-900 text-3xl tracking-tight">Enrollment Protocol</h3>
-                 <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Complete all identity vectors</p>
+                 <h3 className="font-black text-slate-950 text-4xl tracking-tight">Identity Enrollment</h3>
+                 <p className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.4em] mt-3">Campus Protocol: Secure Biometric Registration</p>
                </div>
-               <button onClick={() => setIsEnrollModalOpen(false)} className="w-14 h-14 bg-white border border-slate-200 rounded-3xl flex items-center justify-center text-slate-400 hover:text-red-500 transition-all">
-                  <i className="fa-solid fa-xmark text-2xl"></i>
+               <button onClick={() => setIsEnrollModalOpen(false)} className="w-16 h-16 bg-white border border-indigo-100 rounded-3xl flex items-center justify-center text-slate-400 hover:text-rose-500 hover:rotate-90 transition-all">
+                  <i className="fa-solid fa-xmark text-3xl"></i>
                </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-12">
+            <div className="flex-1 overflow-y-auto p-14 bg-white">
               {enrollStep === 1 ? (
                 <div className="space-y-12">
-                  <div className="flex space-x-6 border-b border-slate-100 pb-4">
+                  <div className="flex space-x-10 border-b border-indigo-50 pb-6">
                      {['PROFESSIONAL', 'PERSONAL', 'BANK'].map(t => (
                        <button 
                         key={t}
                         onClick={() => setActiveTab(t as any)}
-                        className={`text-xs font-black uppercase tracking-widest pb-2 px-2 transition-all ${activeTab === t ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400'}`}
+                        className={`text-[10px] font-black uppercase tracking-[0.3em] pb-3 px-2 transition-all relative ${activeTab === t ? 'text-indigo-600' : 'text-slate-400'}`}
                        >
-                        {t} Details
+                        {t} Profile
+                        {activeTab === t && <span className="absolute bottom-0 left-0 w-full h-1 bg-indigo-600 rounded-full"></span>}
                        </button>
                      ))}
                   </div>
 
                   {activeTab === 'PROFESSIONAL' && (
-                    <div className="grid grid-cols-2 gap-8 animate-[fadeIn_0.3s_ease-out]">
+                    <div className="grid grid-cols-2 gap-10 animate-in fade-in slide-in-from-left-4">
                       <div className="col-span-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Full Legal Name</label>
-                        <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none focus:border-blue-500 font-bold transition-all" />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Member Full Name</label>
+                        <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none focus:border-indigo-500 font-black text-slate-950 transition-all" placeholder="Enter academic legal name..." />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Department</label>
-                        <input type="text" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none focus:border-blue-500 font-bold" />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Department / Faculty</label>
+                        <input type="text" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none focus:border-indigo-500 font-black" placeholder="e.g. Computer Science" />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Official Role</label>
-                        <input type="text" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none focus:border-blue-500 font-bold" />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Registry Role</label>
+                        <input type="text" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none focus:border-indigo-500 font-black" placeholder="e.g. Senior Lecturer" />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Assigned Shift</label>
-                        <select value={formData.shiftId} onChange={e => setFormData({...formData, shiftId: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none font-bold">
-                           {shifts.map(s => <option key={s.id} value={s.id}>{s.name} ({s.startTime})</option>)}
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Assigned Schedule</label>
+                        <select value={formData.shiftId} onChange={e => setFormData({...formData, shiftId: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none font-black text-slate-900">
+                           {schedules.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Pay Type</label>
-                        <select value={formData.salaryType} onChange={e => setFormData({...formData, salaryType: e.target.value as SalaryType})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none font-bold">
-                           <option value="MONTHLY">Monthly Fixed</option>
-                           <option value="DAILY">Daily Wage</option>
-                           <option value="HOURLY">Hourly Rate</option>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Remuneration Logic</label>
+                        <select value={formData.salaryType} onChange={e => setFormData({...formData, salaryType: e.target.value as SalaryType})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none font-black text-slate-900">
+                           <option value="MONTHLY">Institutional Salary</option>
+                           <option value="DAILY">Daily Stipend</option>
+                           <option value="HOURLY">Session Rate</option>
                         </select>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Base Compensation (INR)</label>
-                        <input type="number" value={formData.baseAmount} onChange={e => setFormData({...formData, baseAmount: Number(e.target.value)})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none font-bold" />
                       </div>
                     </div>
                   )}
 
                   {activeTab === 'PERSONAL' && (
-                    <div className="grid grid-cols-2 gap-8 animate-[fadeIn_0.3s_ease-out]">
+                    <div className="grid grid-cols-2 gap-10 animate-in fade-in slide-in-from-left-4">
                       <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Primary Email</label>
-                        <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none font-bold" />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Official Email (@college.edu)</label>
+                        <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none font-black" />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Contact Number</label>
-                        <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none font-bold" />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Secure Contact</label>
+                        <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none font-black" />
+                      </div>
+                      <div className="col-span-2">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Residential Registry Address</label>
+                         <textarea value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none font-black min-h-[120px]" />
                       </div>
                     </div>
                   )}
 
                   {activeTab === 'BANK' && (
-                    <div className="grid grid-cols-2 gap-8 animate-[fadeIn_0.3s_ease-out]">
+                    <div className="grid grid-cols-2 gap-10 animate-in fade-in slide-in-from-left-4">
                       <div className="col-span-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Bank Name</label>
-                        <input type="text" value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none font-bold" />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Institutional Bank</label>
+                        <input type="text" value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none font-black" />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Account Number</label>
-                        <input type="text" value={formData.bankAccount} onChange={e => setFormData({...formData, bankAccount: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none font-bold" />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Account Number</label>
+                        <input type="text" value={formData.bankAccount} onChange={e => setFormData({...formData, bankAccount: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none font-black" />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">IFSC Code</label>
-                        <input type="text" value={formData.ifsc} onChange={e => setFormData({...formData, ifsc: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] px-6 py-4 outline-none font-bold" />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Branch Code / IFSC</label>
+                        <input type="text" value={formData.ifsc} onChange={e => setFormData({...formData, ifsc: e.target.value})} className="w-full bg-indigo-50/30 border-2 border-indigo-50 rounded-[28px] px-8 py-5 outline-none font-black" />
                       </div>
                     </div>
                   )}
 
-                  <div className="pt-10 flex justify-end shrink-0">
+                  <div className="pt-12 flex justify-end">
                     <button 
                       onClick={() => { setEnrollStep(2); startEnrollmentCamera(); }}
-                      className="bg-blue-600 text-white px-12 py-5 rounded-[24px] font-black uppercase tracking-widest text-xs shadow-2xl shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center space-x-4"
+                      className="bg-indigo-600 text-white px-14 py-6 rounded-[32px] font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-600/40 hover:bg-indigo-700 transition-all flex items-center space-x-5"
                     >
-                      <span>Phase II: Face Capture</span>
-                      <i className="fa-solid fa-arrow-right"></i>
+                      <span>Phase II: Biometric Capture</span>
+                      <i className="fa-solid fa-chevron-right"></i>
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-12">
-                  <div className="relative rounded-[40px] overflow-hidden bg-black aspect-video flex items-center justify-center shadow-2xl border-[12px] border-slate-100">
-                     <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4">
+                  <div className="relative rounded-[60px] overflow-hidden bg-slate-950 aspect-video flex items-center justify-center shadow-3xl border-[20px] border-slate-50">
+                     <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover opacity-80" />
                      <canvas ref={canvasRef} className="hidden" />
-                     <div className="absolute inset-0 border-4 border-dashed border-white/20 pointer-events-none m-8 rounded-[32px]"></div>
+                     <div className="absolute inset-0 border-2 border-dashed border-indigo-400/30 m-12 rounded-[50px]"></div>
+                     <div className="absolute top-10 left-10 bg-indigo-600 px-6 py-2 rounded-full text-white font-black text-[9px] uppercase tracking-widest animate-pulse">Visual Stream Active</div>
                   </div>
 
-                  <div className="flex justify-between items-center bg-slate-50 p-8 rounded-[32px] border border-slate-200">
+                  <div className="flex justify-between items-center bg-indigo-50/30 p-10 rounded-[45px] border border-indigo-100/50">
                     <div>
-                       <h4 className="font-black text-slate-900 text-xl leading-none mb-1">Neural Capture</h4>
-                       <p className="text-slate-500 font-bold text-sm tracking-tight">Need {Math.max(0, 5 - capturedImages.length)} more valid frames</p>
+                       <h4 className="font-black text-slate-950 text-2xl tracking-tight mb-2">Neural Identity Mapping</h4>
+                       <p className="text-indigo-500 font-black text-[10px] uppercase tracking-widest">{capturedImages.length >= 5 ? 'Registry ready for synchronization' : `Awaiting ${5 - capturedImages.length} additional valid vectors`}</p>
                     </div>
-                    <button onClick={captureEnrollmentImage} disabled={capturedImages.length >= 8} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-slate-900/20 active:scale-95 transition-all disabled:opacity-30">
-                      <i className="fa-solid fa-aperture mr-3 text-lg animate-spin-slow"></i> Snapshot
+                    <button onClick={captureEnrollmentImage} disabled={capturedImages.length >= 8} className="bg-slate-950 text-white px-10 py-5 rounded-[24px] font-black uppercase tracking-widest text-[10px] shadow-2xl active:scale-95 transition-all disabled:opacity-20 flex items-center space-x-4">
+                      <i className="fa-solid fa-camera-retro text-xl"></i>
+                      <span>Capture Vector</span>
                     </button>
                   </div>
 
-                  <div className="flex space-x-4 overflow-x-auto pb-6 scrollbar-hide">
+                  <div className="flex space-x-6 overflow-x-auto pb-8 scrollbar-hide">
                      {capturedImages.map((img, i) => (
-                       <img key={i} src={img} className="w-24 h-24 rounded-3xl object-cover border-4 border-white shadow-md shrink-0" />
+                       <div key={i} className="relative group shrink-0">
+                          <img src={img} className="w-32 h-32 rounded-[35px] object-cover border-4 border-white shadow-xl grayscale hover:grayscale-0 transition-all" />
+                          <div className="absolute -top-2 -right-2 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-[10px] font-black">#{i+1}</div>
+                       </div>
                      ))}
                   </div>
 
-                  <div className="flex space-x-4 shrink-0">
-                    <button onClick={() => setEnrollStep(1)} className="flex-1 bg-slate-100 text-slate-600 py-5 rounded-[24px] font-black uppercase tracking-widest text-xs hover:bg-slate-200">
-                      Back to Specs
+                  <div className="flex space-x-6">
+                    <button onClick={() => setEnrollStep(1)} className="flex-1 bg-slate-100 text-slate-600 py-6 rounded-[30px] font-black uppercase tracking-widest text-[10px] hover:bg-indigo-50 transition-all">
+                      Review Registry Profile
                     </button>
                     <button 
                       onClick={handleFinishEnrollment} 
                       disabled={capturedImages.length < 5 || isProcessingEnrollment}
-                      className="flex-[2] bg-green-600 text-white py-5 rounded-[24px] font-black uppercase tracking-widest text-xs shadow-2xl shadow-green-500/30 hover:bg-green-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-4"
+                      className="flex-[2] bg-indigo-600 text-white py-6 rounded-[30px] font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-600/40 hover:bg-indigo-700 transition-all disabled:opacity-30 flex items-center justify-center space-x-6"
                     >
                       {isProcessingEnrollment ? (
                         <>
-                          <i className="fa-solid fa-brain-circuit animate-pulse text-lg"></i>
-                          <span>Neural Syncing...</span>
+                          <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                          <span>Advisor AI Synchronizing...</span>
                         </>
                       ) : (
                         <>
-                          <i className="fa-solid fa-shield-check text-lg"></i>
-                          <span>Finalize Activation</span>
+                          <i className="fa-solid fa-user-check text-xl"></i>
+                          <span>Activate Campus Identity</span>
                         </>
                       )}
                     </button>

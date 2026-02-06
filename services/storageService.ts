@@ -2,11 +2,11 @@
 import { Employee, AttendanceRecord, Shift, Holiday, LeaveRequest } from '../types';
 
 const KEYS = {
-  EMPLOYEES: 'smartgate_employees',
-  ATTENDANCE: 'smartgate_attendance',
-  SHIFTS: 'smartgate_shifts',
-  HOLIDAYS: 'smartgate_holidays',
-  LEAVES: 'smartgate_leaves'
+  EMPLOYEES: 'college_advisor_members',
+  ATTENDANCE: 'college_advisor_attendance',
+  SHIFTS: 'college_advisor_schedules',
+  HOLIDAYS: 'college_advisor_calendar',
+  LEAVES: 'college_advisor_absence_requests'
 };
 
 export const StorageService = {
@@ -14,13 +14,13 @@ export const StorageService = {
   initDefaults: () => {
     if (!localStorage.getItem(KEYS.SHIFTS)) {
       const defaultShift: Shift = {
-        id: 'SHIFT-DEFAULT',
-        name: 'Standard Morning',
+        id: 'SCHED-DEFAULT',
+        name: 'Standard Academic Day',
         type: 'FIXED',
-        startTime: '09:00',
-        endTime: '18:00',
-        gracePeriod: 15,
-        breakDuration: 60,
+        startTime: '08:30',
+        endTime: '16:30',
+        gracePeriod: 10,
+        breakDuration: 45,
         minOvertimeHours: 1
       };
       localStorage.setItem(KEYS.SHIFTS, JSON.stringify([defaultShift]));
