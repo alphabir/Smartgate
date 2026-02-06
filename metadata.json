@@ -1,0 +1,7 @@
+{
+  "name": "SmartGate Attendance AI",
+  "description": "An enterprise-grade facial recognition attendance system for office gates, featuring real-time AI detection, check-in/out logic, and a comprehensive admin dashboard.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
