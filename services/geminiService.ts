@@ -2,14 +2,25 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Employee, RecognitionResult } from "../types";
 
-// Always use process.env.API_KEY directly as per guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Safety check for API Key to avoid "process is not defined" or null errors in browser
+const getApiKey = () => {
+  try {
+    return process.env.API_KEY || '';
+  } catch (e) {
+    return '';
+  }
+};
+
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
 export const GeminiService = {
   /**
-   * Enrollment (Complex Task): Uses Pro for high-precision feature extraction.
+   * Enrollment: Uses Pro for high-precision feature extraction.
    */
   async generateVisualSignature(images: string[]): Promise<string> {
+    const key = getApiKey();
+    if (!key) throw new Error("Missing API Key for College Advisor Biometrics");
+
     const imageParts = images.map(img => ({
       inlineData: {
         data: img.split(',')[1],
@@ -44,10 +55,12 @@ export const GeminiService = {
   },
 
   /**
-   * Identification (Speed Task): Uses Flash for real-time gate responses.
+   * Identification: Uses Flash for real-time gate responses.
    */
   async identifyFace(frameBase64: string, members: Employee[]): Promise<RecognitionResult> {
     if (members.length === 0) return { matched: false, confidence: 0 };
+    const key = getApiKey();
+    if (!key) return { matched: false, confidence: 0, message: "System Offline: Key Missing" };
 
     const livePart = {
       inlineData: { data: frameBase64.split(',')[1], mimeType: 'image/jpeg' }
@@ -99,6 +112,9 @@ export const GeminiService = {
    * Liveness Detection: Temporal analysis for anti-spoofing.
    */
   async verifyLiveness(frames: string[]): Promise<{ isLive: boolean; confidence: number }> {
+    const key = getApiKey();
+    if (!key) return { isLive: false, confidence: 0 };
+
     const imageParts = frames.map(img => ({
       inlineData: { data: img.split(',')[1], mimeType: 'image/jpeg' }
     }));
